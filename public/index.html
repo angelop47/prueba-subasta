@@ -1,0 +1,57 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subasta en tiempo real</title>
+</head>
+
+<body>
+  <h1>Subasta en tiempo real</h1>
+  <p>Oferta actual: <span id="currentBid">0</span> (por <span id="currentBidder">Nadie</span>)</p>
+
+  <form id="bidForm">
+    <input type="text" id="bidderName" placeholder="Tu nombre" required />
+    <input type="number" id="bidAmount" placeholder="Tu oferta" required />
+    <button type="submit">Enviar oferta</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const currentBidElement = document.getElementById('currentBid');
+    const currentBidderElement = document.getElementById('currentBidder');
+    const bidForm = document.getElementById('bidForm');
+    const messageElement = document.getElementById('message');
+
+    // Escuchar la oferta actual cuando el cliente se conecta
+    socket.on('currentBid', (data) => {
+      currentBidElement.textContent = data.currentBid;
+      currentBidderElement.textContent = data.currentBidder || 'Nadie';
+    });
+
+    // Escuchar cuando una oferta es rechazada
+    socket.on('bidRejected', (message) => {
+      messageElement.textContent = message;
+    });
+
+    // Enviar una nueva oferta
+    bidForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const bidderName = document.getElementById('bidderName').value;
+      const bidAmount = parseFloat(document.getElementById('bidAmount').value);
+
+      socket.emit('newBid', {
+        bidder: bidderName,
+        bid: bidAmount
+      });
+    });
+  </script>
+</body>
+
+</html>
